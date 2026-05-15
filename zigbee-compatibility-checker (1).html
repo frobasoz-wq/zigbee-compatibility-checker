@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zigbee Device Compatibility Checker — zigbee.com.au</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#C8DCF0;--bg-card:#FFFFFF;--bg-card2:#EBF3FA;--bg-card3:#F0F6FB;
+  --electric:#0077CC;--el-light:rgba(0,119,204,0.10);
+  --hub-red:#E8003D;--router-green:#5A8A6A;--device-blue:#5A7FA8;
+  --excellent-bg:#EAF7EE;--excellent-b:#5A9A6A;--excellent-t:#1A5A2A;
+  --good-bg:#EEF6FF;--good-b:#5A80BB;--good-t:#1A3A6A;
+  --partial-bg:#FFF8E8;--partial-b:#D4960A;--partial-t:#6A4800;
+  --limited-bg:#FFF0E0;--limited-b:#D46A0A;--limited-t:#5A2800;
+  --no-bg:#FDEEF2;--no-b:#E8003D;--no-t:#7A0020;
+  --text-dark:#141E30;--text-mid:#3A4A60;--text-light:#6A7A90;
+  --border:#C0D0E0;--shadow:rgba(20,40,80,0.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-dark);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(0,119,204,0.07) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+
+.wrapper{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:28px 16px 52px;}
+
+/* HEADER */
+.hdr{text-align:center;margin-bottom:24px;animation:fadeDown .6s ease both;}
+.brand-tag{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--electric);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.brand-tag::before,.brand-tag::after{content:'';width:28px;height:1px;background:var(--electric);opacity:.4;}
+.ttl{font-family:'Syne',sans-serif;font-size:clamp(22px,4vw,36px);font-weight:800;line-height:1.1;color:var(--text-dark);margin-bottom:8px;}
+.ttl span{color:var(--electric);}
+.sub{font-size:15px;color:var(--text-mid);max-width:560px;margin:0 auto;line-height:1.55;}
+
+/* SEARCH PANEL */
+.search-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:24px 26px;box-shadow:0 4px 20px var(--shadow);margin-bottom:20px;animation:slideUp .4s ease both;}
+
+.hub-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.hub-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-light);flex-shrink:0;}
+.hub-select{flex:1;min-width:200px;padding:10px 14px;background:var(--bg-card2);border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text-dark);cursor:pointer;transition:all .18s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236A7A90' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+.hub-select:focus{outline:none;border-color:var(--electric);}
+.hub-select.active{border-color:var(--electric);background-color:var(--el-light);}
+
+.search-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:14px;}
+@media(max-width:500px){.search-row{grid-template-columns:1fr;}}
+.search-input{padding:11px 16px;background:var(--bg-card2);border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text-dark);transition:all .18s;width:100%;}
+.search-input:focus{outline:none;border-color:var(--electric);background:#fff;}
+.search-input::placeholder{color:var(--text-light);}
+.btn-search{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--electric),#00AADE);border:none;border-radius:10px;padding:11px 24px;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.btn-search:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,119,204,.3);}
+
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg-card2);color:var(--text-light);cursor:pointer;transition:all .18s;}
+.filter-btn:hover{border-color:var(--electric);color:var(--electric);}
+.filter-btn.active{border-color:var(--electric);background:var(--el-light);color:var(--electric);}
+
+/* RESULTS LIST */
+.results-meta{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-light);margin-bottom:12px;padding:0 2px;}
+
+.device-list{display:grid;gap:10px;margin-bottom:20px;}
+
+.device-row{background:var(--bg-card);border:1.5px solid var(--border);border-radius:13px;padding:16px 18px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px var(--shadow);}
+.device-row:hover{border-color:var(--electric);transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,119,204,.12);}
+.device-row.selected{border-color:var(--electric);background:var(--el-light);}
+
+.dev-brand-pill{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;flex-shrink:0;}
+.dev-info{flex:1;min-width:0;}
+.dev-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dev-code{font-size:12px;color:var(--text-light);font-family:monospace;}
+.dev-tags{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;}
+.dev-tag{font-size:11px;color:var(--text-mid);background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;}
+.dev-compat{flex-shrink:0;text-align:right;}
+.compat-badge{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px;display:inline-block;}
+.badge-Excellent{background:var(--excellent-bg);color:var(--excellent-t);border:1px solid var(--excellent-b);}
+.badge-Good{background:var(--good-bg);color:var(--good-t);border:1px solid var(--good-b);}
+.badge-Partial{background:var(--partial-bg);color:var(--partial-t);border:1px solid var(--partial-b);}
+.badge-Limited{background:var(--limited-bg);color:var(--limited-t);border:1px solid var(--limited-b);}
+.badge-No{background:var(--no-bg);color:var(--no-t);border:1px solid var(--no-b);}
+.badge-Unknown{background:var(--bg-card2);color:var(--text-light);border:1px solid var(--border);}
+
+/* DETAIL CARD */
+.detail-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 6px 28px var(--shadow);animation:popIn .4s ease both;margin-bottom:20px;}
+
+.detail-top{padding:24px 26px 20px;}
+.detail-breadcrumb{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.detail-breadcrumb button{background:none;border:none;cursor:pointer;color:var(--electric);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:0;}
+.detail-name{font-family:'Syne',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:800;color:var(--text-dark);margin-bottom:6px;line-height:1.2;}
+.detail-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.detail-meta-chip{font-size:13px;color:var(--text-mid);background:var(--bg-card2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;}
+.detail-meta-chip.code{font-family:monospace;font-size:12px;color:var(--electric);background:var(--el-light);border-color:rgba(0,119,204,.2);}
+
+/* VERDICT BANNER */
+.verdict-banner{border-radius:14px;padding:18px 20px;margin-bottom:18px;display:flex;align-items:flex-start;gap:16px;}
+.verdict-banner.Excellent{background:var(--excellent-bg);border:2px solid var(--excellent-b);}
+.verdict-banner.Good{background:var(--good-bg);border:2px solid var(--good-b);}
+.verdict-banner.Partial{background:var(--partial-bg);border:2px solid var(--partial-b);}
+.verdict-banner.Limited{background:var(--limited-bg);border:2px solid var(--limited-b);}
+.verdict-banner.No{background:var(--no-bg);border:2px solid var(--no-b);}
+.verdict-icon{font-size:28px;flex-shrink:0;line-height:1;}
+.verdict-right{flex:1;}
+.verdict-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;}
+.verdict-banner.Excellent .verdict-label{color:var(--excellent-t);}
+.verdict-banner.Good .verdict-label{color:var(--good-t);}
+.verdict-banner.Partial .verdict-label{color:var(--partial-t);}
+.verdict-banner.Limited .verdict-label{color:var(--limited-t);}
+.verdict-banner.No .verdict-label{color:var(--no-t);}
+.verdict-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.2;margin-bottom:4px;}
+.verdict-banner.Excellent .verdict-title{color:var(--excellent-t);}
+.verdict-banner.Good .verdict-title{color:var(--good-t);}
+.verdict-banner.Partial .verdict-title{color:var(--partial-t);}
+.verdict-banner.Limited .verdict-title{color:var(--limited-t);}
+.verdict-banner.No .verdict-title{color:var(--no-t);}
+.verdict-note{font-size:14px;line-height:1.6;}
+.verdict-banner.Excellent .verdict-note{color:var(--excellent-t);opacity:.85;}
+.verdict-banner.Good .verdict-note{color:var(--good-t);opacity:.85;}
+.verdict-banner.Partial .verdict-note{color:var(--partial-t);opacity:.85;}
+.verdict-banner.Limited .verdict-note{color:var(--limited-t);opacity:.85;}
+.verdict-banner.No .verdict-note{color:var(--no-t);opacity:.85;}
+
+/* MESH ROLE */
+.mesh-row{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;background:var(--bg-card2);border:1.5px solid var(--border);border-radius:12px;margin-bottom:18px;}
+.mesh-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.mesh-role-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:3px;}
+.mesh-role-note{font-size:13.5px;color:var(--text-mid);line-height:1.6;}
+
+/* THREE INFO CARDS */
+.info-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+@media(max-width:580px){.info-cards{grid-template-columns:1fr;}}
+.info-card{background:var(--bg-card2);border:1.5px solid var(--border);border-radius:12px;padding:16px;}
+.info-card-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.info-items{display:grid;gap:6px;}
+.info-item{font-size:13.5px;color:var(--text-mid);line-height:1.5;display:flex;align-items:flex-start;gap:7px;}
+.info-bullet{color:var(--electric);flex-shrink:0;font-weight:700;margin-top:1px;}
+.info-item.issue .info-bullet{color:#D46A0A;}
+.no-items{font-size:13px;color:var(--text-light);font-style:italic;}
+
+/* ECOSYSTEM TABLE */
+.ecosystem-toggle{width:100%;padding:14px 18px;background:none;border:none;border-top:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--electric);transition:background .18s;}
+.ecosystem-toggle:hover{background:var(--el-light);}
+.eco-arrow{transition:transform .25s;font-size:12px;}
+.ecosystem-toggle.open .eco-arrow{transform:rotate(180deg);}
+.ecosystem-body{display:none;padding:16px 20px 20px;}
+.ecosystem-body.open{display:block;}
+.eco-table{width:100%;border-collapse:collapse;}
+.eco-table th{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-light);padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);}
+.eco-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle;}
+.eco-table tr:last-child td{border-bottom:none;}
+.eco-table tr:hover td{background:var(--bg-card2);}
+.eco-hub-name{font-weight:600;color:var(--text-dark);}
+.eco-status{display:inline-flex;align-items:center;gap:6px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;padding:4px 11px;border-radius:100px;}
+.eco-Excellent{background:var(--excellent-bg);color:var(--excellent-t);border:1px solid var(--excellent-b);}
+.eco-Good{background:var(--good-bg);color:var(--good-t);border:1px solid var(--good-b);}
+.eco-Partial{background:var(--partial-bg);color:var(--partial-t);border:1px solid var(--partial-b);}
+.eco-Limited{background:var(--limited-bg);color:var(--limited-t);border:1px solid var(--limited-b);}
+.eco-No{background:var(--no-bg);color:var(--no-t);border:1px solid var(--no-b);}
+
+/* AMAZON LINK */
+.amazon-row{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.amazon-link{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:linear-gradient(135deg,#FF9900,#E67E00);color:#fff;border-radius:10px;text-decoration:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;transition:all .18s;box-shadow:0 3px 12px rgba(230,126,0,.25);}
+.amazon-link:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(230,126,0,.35);}
+.region-note{font-size:12px;color:var(--text-light);}
+
+/* NO RESULTS */
+.no-results{text-align:center;padding:48px 20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);}
+.no-results-em{font-size:40px;margin-bottom:14px;}
+.no-results-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text-dark);margin-bottom:8px;}
+.no-results-sub{font-size:14px;color:var(--text-light);line-height:1.6;}
+
+.tool-footer{text-align:center;margin-top:16px;font-size:12px;color:var(--text-light);}
+.tool-footer a{color:var(--electric);text-decoration:none;}
+
+/* BRAND COLOUR PILLS */
+.brand-Aqara{background:#E8F0FF;color:#3355AA;}
+.brand-Sonoff{background:#FFF0E8;color:#AA4400;}
+.brand-IKEA{background:#FFF8E0;color:#AA7700;}
+.brand-Philips{background:#F0E8FF;color:#6633AA;}
+.brand-Sengled{background:#E8F8EE;color:#226633;}
+.brand-Innr{background:#E8EEFF;color:#334488;}
+.brand-Tuya{background:#FFE8F0;color:#AA2255;}
+.brand-Samsung{background:#E8F4FF;color:#003399;}
+.brand-Sonoff{background:#FFF0E8;color:#CC5500;}
+.brand-NOUS{background:#E8FFF0;color:#226644;}
+.brand-Third{background:#F8F0FF;color:#553388;}
+.brand-Heiman{background:#FFE8E8;color:#AA2222;}
+.brand-default{background:var(--bg-card2);color:var(--text-mid);}
+
+@media(max-width:580px){
+  .device-row{flex-wrap:wrap;}
+  .dev-compat{width:100%;text-align:left;}
+  .wrapper{padding:16px 12px 40px;}
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<div class="hdr">
+  <div class="brand-tag">zigbee.com.au</div>
+  <h1 class="ttl">Device Compatibility<br><span>Checker</span></h1>
+  <p class="sub">Search any Zigbee device to see how it behaves with your hub — compatibility, mesh role, pairing tips and known issues.</p>
+</div>
+
+<div class="search-panel">
+  <div class="hub-row">
+    <span class="hub-label">Your hub:</span>
+    <select class="hub-select" id="hubSelect" onchange="applyFilters()">
+      <option value="">— Select your hub to see personalised results —</option>
+      <option value="hub_ha_z2m">Home Assistant + Zigbee2MQTT</option>
+      <option value="hub_ha_zha">Home Assistant + ZHA</option>
+      <option value="hub_echo">Amazon Echo (4th gen / Plus / Studio)</option>
+      <option value="hub_aqara">Aqara Hub M2 / M3</option>
+      <option value="hub_hue">Philips Hue Bridge v2</option>
+      <option value="hub_ikea">IKEA Dirigera</option>
+      <option value="hub_smartthings">Samsung SmartThings</option>
+      <option value="hub_sonoff_ihost">Sonoff iHost</option>
+      <option value="hub_hubitat">Hubitat Elevation</option>
+    </select>
+  </div>
+  <div class="search-row">
+    <input class="search-input" id="searchInput" type="text" placeholder="Search by device name or model code (e.g. SNZB-04, MS-S02)..." oninput="applyFilters()">
+    <button class="btn-search" onclick="applyFilters()">Search</button>
+  </div>
+  <div class="filter-row" id="filterRow">
+    <button class="filter-btn active" data-cat="All" onclick="setCategory('All',this)">All</button>
+    <button class="filter-btn" data-cat="Sensor" onclick="setCategory('Sensor',this)">Sensors</button>
+    <button class="filter-btn" data-cat="Lighting" onclick="setCategory('Lighting',this)">Lighting</button>
+    <button class="filter-btn" data-cat="Plug" onclick="setCategory('Plug',this)">Smart Plugs</button>
+    <button class="filter-btn" data-cat="Switch" onclick="setCategory('Switch',this)">Switches</button>
+    <button class="filter-btn" data-cat="Climate" onclick="setCategory('Climate',this)">Climate</button>
+    <button class="filter-btn" data-cat="Security" onclick="setCategory('Security',this)">Security</button>
+    <button class="filter-btn" data-cat="Hub" onclick="setCategory('Hub',this)">Hubs</button>
+  </div>
+</div>
+
+<div id="resultsArea"></div>
+
+<div class="tool-footer">
+  <a href="https://zigbee.com.au">zigbee.com.au</a> — Australia's Zigbee smart home guide · Compatibility data based on community testing and manufacturer documentation · Always verify with your specific firmware version.
+</div>
+</div>
+
+<script>
+// ── GOOGLE SHEETS CSV SOURCE ──
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vST3xm6Hb5YoB5xAFhjDpaSNeP6XHzj3pF5CCQLmJbO-pg8wUTDiZo1BhMXs80pNyGIJLnPAVPuDCXY/pub?gid=0&single=true&output=csv';
+
+let DEVICES = [];
+let dataLoaded = false;
+
+// ── CSV PARSER ──
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]);
+  const devices = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    if (vals.length < 2) continue;
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h.trim()] = (vals[idx] || '').trim(); });
+    if (obj.brand && obj.model_name) devices.push(obj);
+  }
+  return devices;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current); current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// ── LOAD DATA ──
+function loadData() {
+  document.getElementById('resultsArea').innerHTML = `
+    <div style="text-align:center;padding:48px 20px;background:var(--bg-card);border-radius:16px;border:1px solid var(--border);">
+      <div style="font-size:32px;margin-bottom:14px;">📡</div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text-dark);margin-bottom:8px;">Loading device database...</div>
+      <div style="font-size:14px;color:var(--text-light);">Fetching latest compatibility data</div>
+    </div>`;
+
+  fetch(CSV_URL)
+    .then(r => { if (!r.ok) throw new Error('Network error'); return r.text(); })
+    .then(text => {
+      const parsed = parseCSV(text);
+      DEVICES = parsed.length > 0 ? parsed : DEVICES_SEED;
+      dataLoaded = true;
+      renderResults();
+    })
+    .catch(() => {
+      // Fall back to seed data if fetch fails
+      DEVICES = DEVICES_SEED;
+      dataLoaded = true;
+      renderResults();
+    });
+}
+
+// ── SEED DATA (fallback if Google Sheets unavailable) ──
+const DEVICES_SEED = [
+
+// ── SENSORS: MOTION ──
+{brand:'Aqara',model_name:'Motion Sensor P1',model_code:'MS-S02',category:'Sensor',subcategory:'Motion',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — reliable and well-behaved. Does not extend your mesh but will not disrupt it.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Good',hub_hubitat:'Excellent',key_behaviours:'Pet-immune PIR detection|Fast ~1 second response|Stable battery reporting|Adjustable sensitivity',pairing_notes:'Pair within 1m of coordinator|Hold button 5 seconds until LED flashes|Interview takes ~30 seconds in Z2M',known_issues:'Can lose route after coordinator reboot — perform a re-join to fix|Some users report missed events if sensitivity set too low',verdict_note:'Works reliably with your hub. A well-regarded sensor with no significant compatibility issues.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Aqara',model_name:'Motion Sensor (original)',model_code:'RTCGQ11LM',category:'Sensor',subcategory:'Motion',zigbee_version:'HA',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — older Zigbee HA protocol. Works well but limited outside the Aqara ecosystem.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Standard PIR detection|~5 second re-trigger delay|Older Zigbee HA protocol',pairing_notes:'Pair within 1m of coordinator|Hold button until LED blinks|May require re-pairing if previously on Aqara hub',known_issues:'Older Zigbee HA protocol causes limited features outside Aqara hub|Some SmartThings users report inconsistent updates',verdict_note:'Works well with your hub but uses the older Zigbee HA protocol. Consider the P1 for new installations.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-03 Motion Sensor',model_code:'SNZB-03',category:'Sensor',subcategory:'Motion',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — straightforward and reliable. Excellent value for the price.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Wide 110 degree detection angle|~5 second re-trigger delay|Reliable battery reporting',pairing_notes:'Hold button 5 seconds to enter pairing mode|LED flashes rapidly when ready|Pairs quickly — usually under 30 seconds',known_issues:'Detection angle narrower than spec in some units|Occasional missed events at low battery',verdict_note:'One of the most compatible Zigbee motion sensors available. Works well with virtually every hub.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-03P Motion Sensor',model_code:'SNZB-03P',category:'Sensor',subcategory:'Motion',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — upgraded version of SNZB-03 with wider angle and faster response.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Wider 120 degree detection|Faster response than SNZB-03|Adjustable sensitivity in Z2M',pairing_notes:'Hold button 5 seconds|LED blinks when in pairing mode|Pairs cleanly on all major hubs',known_issues:'None significant reported',verdict_note:'The improved version of the SNZB-03. Excellent compatibility across all major hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Philips',model_name:'Hue Motion Sensor',model_code:'SML001',category:'Sensor',subcategory:'Motion',zigbee_version:'HA',power_type:'Battery',battery_type:'AAA',mesh_role:'End Device',mesh_note:'End device only — uses older Zigbee HA profile. Works natively with Hue Bridge; limited elsewhere.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'No',hub_hue:'Excellent',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Includes temperature and light level sensing|High quality optics|Compact design',pairing_notes:'Press button on back to enter pairing mode|Works best paired near coordinator first|Full features only available on Hue Bridge or Z2M',known_issues:'Light level and temperature sensors may not expose on all hubs|Older Zigbee HA protocol limits compatibility',verdict_note:'Excellent with Hue Bridge or Z2M. More limited on other hubs due to older protocol.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'IKEA',model_name:'TRADFRI Motion Sensor',model_code:'E1525',category:'Sensor',subcategory:'Motion',zigbee_version:'HA',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — designed for IKEA ecosystem. Works best with Dirigera or Z2M.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'No',hub_hue:'No',hub_ikea:'Excellent',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Simple on/off motion detection|Long battery life|Compact round design',pairing_notes:'Hold pairing button until LED blinks|Must be in range of coordinator during pairing|IKEA devices often need to be reset before re-pairing to a new hub',known_issues:'Limited features outside IKEA ecosystem|Older Zigbee HA protocol|No sensitivity adjustment',verdict_note:'Works reliably within the IKEA ecosystem. More limited features on non-IKEA hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+// ── SENSORS: DOOR/WINDOW ──
+{brand:'Aqara',model_name:'Door & Window Sensor T1',model_code:'MCCGQ14LM',category:'Sensor',subcategory:'Door / Window',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — the current generation Aqara door sensor. Reliable and well supported.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Good',hub_hubitat:'Excellent',key_behaviours:'Fast open/close reporting|Very long battery life (~2 years)|Small and discreet design',pairing_notes:'Hold reset button until LED blinks three times|Pair within 1m of coordinator|Factory reset required if previously paired elsewhere',known_issues:'None significant — one of the most reliable Zigbee sensors available',verdict_note:'Excellent compatibility and reliability. A top recommendation for any Zigbee network.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Aqara',model_name:'Door & Window Sensor (original)',model_code:'MCCGQ11LM',category:'Sensor',subcategory:'Door / Window',zigbee_version:'HA',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — older Zigbee HA protocol. Still widely used and well supported in Z2M.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Reliable open/close detection|Good battery life|Uses older Zigbee HA protocol',pairing_notes:'Hold button until LED blinks|Pair near coordinator|May need factory reset if previously on Aqara hub',known_issues:'Older protocol limits compatibility on some hubs|Consider T1 version for new installations',verdict_note:'Solid performer but uses older protocol. Consider the T1 model for new purchases.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-04 Door Sensor',model_code:'SNZB-04',category:'Sensor',subcategory:'Door / Window',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — one of the most widely compatible Zigbee door sensors available.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Fast open/close reporting|Zigbee 3.0 — broad compatibility|Reliable battery reporting',pairing_notes:'Hold button 5 seconds until LED flashes|Pairs reliably on all major Zigbee 3.0 hubs|No special steps required',known_issues:'Magnet gap sensitivity can vary between units — test placement before permanent install',verdict_note:'Excellent compatibility across all major hubs. One of the best value Zigbee door sensors available.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-04P Door Sensor',model_code:'SNZB-04P',category:'Sensor',subcategory:'Door / Window',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — upgraded SNZB-04 with improved detection sensitivity.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Improved magnet sensitivity over SNZB-04|Tamper detection|Zigbee 3.0',pairing_notes:'Hold button 5 seconds|LED flashes when in pairing mode|Pairs cleanly on all major hubs',known_issues:'None significant reported',verdict_note:'Improved version of the SNZB-04. Excellent compatibility and slightly better sensitivity.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Philips',model_name:'Hue Door & Window Sensor',model_code:'MCCGQ14LM',category:'Sensor',subcategory:'Door / Window',zigbee_version:'HA',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — designed for Hue ecosystem. Full features only with Hue Bridge.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'No',hub_hue:'Excellent',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Compact design|Reliable open/close detection|Full features with Hue Bridge only',pairing_notes:'Hold button to enter pairing mode|Best paired near coordinator|Z2M users need to check Hue device quirks file',known_issues:'Limited features outside Hue ecosystem|Older protocol on some variants',verdict_note:'Best with Hue Bridge. Partial support on other hubs — check Z2M device list for your specific variant.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'IKEA',model_name:'PARASOLL Door Sensor',model_code:'E2013',category:'Sensor',subcategory:'Door / Window',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — IKEA\'s current Zigbee 3.0 door sensor. Best with Dirigera but broadly compatible.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Good',hub_aqara:'Partial',hub_hue:'No',hub_ikea:'Excellent',hub_smartthings:'Good',hub_sonoff_ihost:'Good',hub_hubitat:'Good',key_behaviours:'Zigbee 3.0 — good broad compatibility|Minimal design|Reliable basic detection',pairing_notes:'Hold pairing button until LED blinks|Factory reset if previously on another hub|Pair near coordinator first',known_issues:'Some users report delayed reporting outside IKEA ecosystem|Basic open/close only — no tamper detection',verdict_note:'Solid Zigbee 3.0 sensor with good broad compatibility. Works best within the IKEA ecosystem.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+// ── SENSORS: TEMPERATURE ──
+{brand:'Aqara',model_name:'Temp & Humidity Sensor T1',model_code:'WSDCGQ14LM',category:'Sensor',subcategory:'Temperature',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — current generation with Zigbee 3.0. Accurate and reliable.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Good',hub_hubitat:'Excellent',key_behaviours:'Accurate temperature and humidity reporting|Configurable reporting interval in Z2M|Long battery life',pairing_notes:'Hold button until LED blinks|Pair near coordinator|Full configuration available in Z2M',known_issues:'Reporting interval can be slow on some hubs — configure via Z2M for best results',verdict_note:'Excellent temperature sensor. Full features available on your hub.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Aqara',model_name:'Temp & Humidity Sensor (original)',model_code:'WSDCGQ11LM',category:'Sensor',subcategory:'Temperature',zigbee_version:'HA',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — older protocol but still widely used and well supported.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Accurate readings|Older Zigbee HA protocol|No screen — reports to hub only',pairing_notes:'Hold button to pair|Works well in Z2M with full attribute access',known_issues:'Older protocol limits features outside Aqara ecosystem|Consider T1 for new installs',verdict_note:'Reliable but older protocol. The T1 version is recommended for new installations.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-02 Temp & Humidity Sensor',model_code:'SNZB-02',category:'Sensor',subcategory:'Temperature',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — one of the most compatible and affordable Zigbee temp sensors available.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Accurate temperature and humidity|Fast pairing|Reliable across all major hubs',pairing_notes:'Hold button 5 seconds|Pairs reliably on all Zigbee 3.0 hubs|No special steps needed',known_issues:'Reporting interval not configurable on some hubs|Slight humidity offset reported by some users',verdict_note:'Highly recommended. Works excellently with your hub and virtually every other platform.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-02P Temp & Humidity Sensor',model_code:'SNZB-02P',category:'Sensor',subcategory:'Temperature',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — improved accuracy and reporting over the original SNZB-02.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Improved accuracy over SNZB-02|Configurable reporting in Z2M|Compact design',pairing_notes:'Hold button 5 seconds|Clean pairing on all Zigbee 3.0 hubs',known_issues:'None significant reported',verdict_note:'Improved version of the SNZB-02. Excellent across all major hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'IKEA',model_name:'VINDSTYRKA Air Quality Sensor',model_code:'E2112',category:'Sensor',subcategory:'Air Quality',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'End Device',mesh_note:'End device only — mains powered but does not act as a router. Unusual for a mains device.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'No',hub_hue:'No',hub_ikea:'Excellent',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'PM2.5, VOC, humidity and temperature|Built-in display|Mains powered but no routing capability',pairing_notes:'Plug in and hold button to pair|Works well with Dirigera natively|Z2M support available but some attributes limited',known_issues:'Does NOT act as a router despite being mains powered — unusual behaviour|Some attributes not exposed outside IKEA ecosystem',verdict_note:'Good air quality sensor within IKEA ecosystem. Limited features on non-IKEA hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+// ── SENSORS: WATER LEAK ──
+{brand:'Aqara',model_name:'Water Leak Sensor',model_code:'SJCGQ11LM',category:'Sensor',subcategory:'Water Leak',zigbee_version:'HA',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — reliable leak detection. Well supported across most hubs.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Good',hub_hubitat:'Good',key_behaviours:'Instant leak detection|Audible alarm on device|Older Zigbee HA protocol',pairing_notes:'Hold button to enter pairing mode|Place near coordinator for initial pairing',known_issues:'Older protocol limits compatibility on some hubs|Alarm continues until manually silenced',verdict_note:'Reliable leak sensor. Full features with Aqara hub or Z2M. Partial support elsewhere.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-05 Water Leak Sensor',model_code:'SNZB-05',category:'Sensor',subcategory:'Water Leak',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — Zigbee 3.0 with broad compatibility.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Fast leak detection|Zigbee 3.0 broad compatibility|Compact flat design',pairing_notes:'Hold button 5 seconds|Pairs cleanly on all Zigbee 3.0 hubs',known_issues:'None significant reported',verdict_note:'Excellent leak sensor with broad compatibility. Recommended for any Zigbee network.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Tuya',model_name:'Zigbee Water Leak Sensor',model_code:'TS0207',category:'Sensor',subcategory:'Water Leak',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — generic Tuya device. Wide availability but behaviour varies by manufacturer.',overall_rating:'Partial',hub_ha_z2m:'Good',hub_ha_zha:'Partial',hub_echo:'Partial',hub_aqara:'No',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Partial',key_behaviours:'Basic leak detection|Behaviour varies by firmware version|Many OEM variants with same model code',pairing_notes:'Hold button to pair|May need multiple attempts on some hubs|Reset by holding button 10 seconds',known_issues:'Tuya firmware varies significantly between sellers — different hardware despite identical model codes|Some variants have delayed reporting|Best supported in Z2M which handles Tuya quirks',verdict_note:'Works but with caveats. Behaviour varies by seller. Z2M provides the best support for Tuya devices.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+// ── SMART PLUGS ──
+{brand:'IKEA',model_name:'TRADFRI Smart Plug',model_code:'E1603',category:'Plug',subcategory:'Smart Plug',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Strong reliable router — excellent choice for building your mesh backbone. Well behaved and stable.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'Good',hub_ikea:'Excellent',hub_smartthings:'Good',hub_sonoff_ihost:'Good',hub_hubitat:'Excellent',key_behaviours:'Excellent mesh router|Basic on/off switching only|No power monitoring|Compact design',pairing_notes:'Hold button until LED blinks|Factory reset by holding 10 seconds|Widely compatible — pairs easily',known_issues:'No power monitoring — switching only|Some EU variants have limited availability|Compact design means it may block adjacent sockets',verdict_note:'One of the best value Zigbee routers available. Recommended as a backbone device.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check plug type for your region'},
+
+{brand:'Sonoff',model_name:'S40 Lite Zigbee Smart Plug',model_code:'S40LITE-ZB',category:'Plug',subcategory:'Smart Plug',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — reliable mesh contribution with power monitoring. Recommended for energy-first setups.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Power monitoring (energy, current, voltage)|Good router capability|Compact design',pairing_notes:'Hold button 5 seconds to pair|Pairs cleanly on all Zigbee 3.0 hubs|Power monitoring available in Z2M and iHost',known_issues:'Power monitoring not available on all hubs — check your hub compatibility|EU and US variants have different model codes',verdict_note:'Excellent plug with power monitoring and good router capability. Highly recommended.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check region variant'},
+
+{brand:'Aqara',model_name:'Smart Plug',model_code:'SP-EUC01',category:'Plug',subcategory:'Smart Plug',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — native to Aqara ecosystem with power monitoring. Best with Aqara hub.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Power monitoring|Router capability|Native Aqara features with M2 hub',pairing_notes:'Hold button until LED flashes|Best paired with Aqara hub for full features|EU plug format',known_issues:'EU variant only — US users need different model|Full power monitoring features require Aqara hub',verdict_note:'Excellent within Aqara ecosystem. More limited on other hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'EU only — SP-EUC01'},
+
+{brand:'NOUS',model_name:'A1Z Zigbee Smart Plug',model_code:'A1Z',category:'Plug',subcategory:'Smart Plug',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — well supported in Z2M. A solid budget-friendly option for mesh building.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Good',hub_aqara:'Partial',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Power monitoring|Router capability|Good Z2M support',pairing_notes:'Hold button to pair|Best supported in Z2M',known_issues:'More limited outside Z2M|Less widely available than Sonoff or IKEA alternatives',verdict_note:'Good option especially for Z2M users. Solid router capability and power monitoring.',amazon_url:'https://amzn.to/placeholder',region_notes:'EU primarily'},
+
+{brand:'Tuya',model_name:'Zigbee Smart Plug TS011F',model_code:'TS011F',category:'Plug',subcategory:'Smart Plug',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Router capability present but quality varies by manufacturer. Some variants destabilise meshes.',overall_rating:'Partial',hub_ha_z2m:'Good',hub_ha_zha:'Partial',hub_echo:'Partial',hub_aqara:'No',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Partial',key_behaviours:'Power monitoring on most variants|Router capable|Many OEM variants under same model code',pairing_notes:'Hold button to pair|May need multiple attempts|Z2M handles Tuya quirks best',known_issues:'Hardware varies significantly between sellers despite identical model code|Some variants have poor routing behaviour and can destabilise meshes|Z2M provides best compatibility|Avoid cheap unbranded variants',verdict_note:'Use with caution. Z2M provides the best support. Verify seller reputation before purchasing.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'S26R2ZB Smart Plug',model_code:'S26R2ZB',category:'Plug',subcategory:'Smart Plug',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — a reliable basic smart plug. No power monitoring but solid router performance.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Excellent',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Basic on/off switching|Good router capability|No power monitoring',pairing_notes:'Hold button 5 seconds|Pairs cleanly on all Zigbee 3.0 hubs',known_issues:'No power monitoring — switching only',verdict_note:'Reliable basic smart plug and router. Choose S40 Lite if you want power monitoring.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check region variant'},
+
+{brand:'Third Reality',model_name:'Zigbee Smart Plug',model_code:'3RSP019BZ',category:'Plug',subcategory:'Smart Plug',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — well behaved and reliable. Popular in the US market.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Good',hub_aqara:'Partial',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Power monitoring|Good router capability|US market focus',pairing_notes:'Hold button to pair|Good Z2M and SmartThings support',known_issues:'Less widely available outside US|More limited on some non-Z2M hubs',verdict_note:'Good choice especially for US-based Z2M and SmartThings users.',amazon_url:'https://amzn.to/placeholder',region_notes:'US primarily'},
+
+// ── LIGHTING: BULBS ──
+{brand:'Philips',model_name:'Hue White Bulb A19',model_code:'LCA001',category:'Lighting',subcategory:'Bulb — White',zigbee_version:'HA',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Acts as a router but only when powered on at the wall. Never switch Hue bulbs off at the wall switch — they will drop out of the mesh.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'No',hub_hue:'Excellent',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Partial',hub_hubitat:'Excellent',key_behaviours:'Premium light quality|Full dimming|Works without Hue Bridge via Z2M',pairing_notes:'Factory reset by switching on and off 6 times|Or use Hue dimmer to reset|Z2M users: no Hue Bridge needed — pair directly',known_issues:'Never switch off at wall — drops from mesh|Factory reset process can be unreliable — may need multiple attempts|Older Zigbee HA protocol',verdict_note:'Excellent quality bulb. Works without Hue Bridge via Z2M. Never switch off at the wall.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Philips',model_name:'Hue White & Colour Ambiance A19',model_code:'LCA003',category:'Lighting',subcategory:'Bulb — Colour',zigbee_version:'HA',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Acts as a router but only when powered on. Never switch off at the wall or it will drop out of the mesh.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'No',hub_hue:'Excellent',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Partial',hub_hubitat:'Excellent',key_behaviours:'Full RGB colour plus tunable white|Premium light quality|Works without Hue Bridge via Z2M',pairing_notes:'Factory reset by switching on/off 6 times|Z2M users pair directly — no Hue Bridge needed|Use Hue Essentials app for easy reset',known_issues:'Never switch off at wall|Factory reset can need multiple attempts|Full colour control requires Z2M or Hue Bridge',verdict_note:'Premium colour bulb. Full control available via Z2M without Hue Bridge.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'IKEA',model_name:'TRADFRI LED Bulb E27 White',model_code:'LED1836G9',category:'Lighting',subcategory:'Bulb — White',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Acts as a router when powered on. Works best with IKEA Dirigera. Caution: requires IKEA gateway for full function — unreliable with non-IKEA hubs.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'No',hub_aqara:'No',hub_hue:'No',hub_ikea:'Excellent',hub_smartthings:'Partial',hub_sonoff_ihost:'No',hub_hubitat:'Partial',key_behaviours:'Tunable white (warm to cool)|Good dimming|Requires IKEA gateway for full features',pairing_notes:'Reset by switching off/on 6 times|Must be paired via IKEA Dirigera for reliable operation|Direct pairing with non-IKEA hubs is unreliable',known_issues:'Designed for IKEA ecosystem only — unreliable with Echo, Aqara or Sonoff hubs|Z2M provides some support but not officially recommended|Never switch off at wall',verdict_note:'Best within IKEA ecosystem only. Not recommended for use with non-IKEA hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check fitting type for your region'},
+
+{brand:'IKEA',model_name:'TRADFRI LED Bulb E27 Colour',model_code:'LED1924G9',category:'Lighting',subcategory:'Bulb — Colour',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Acts as a router when powered on. IKEA ecosystem only — same caveats as white bulb apply.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Partial',hub_echo:'No',hub_aqara:'No',hub_hue:'No',hub_ikea:'Excellent',hub_smartthings:'Partial',hub_sonoff_ihost:'No',hub_hubitat:'Partial',key_behaviours:'Full RGB colour|Good IKEA app integration|Requires IKEA gateway for full features',pairing_notes:'Reset by switching off/on 6 times|Pair via IKEA Dirigera for reliable operation',known_issues:'Designed for IKEA ecosystem — unreliable on non-IKEA hubs|Full colour control requires IKEA hub',verdict_note:'IKEA ecosystem only. Not recommended for use with non-IKEA hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check fitting type'},
+
+{brand:'Sengled',model_name:'Smart LED Bulb E26',model_code:'E11-G13',category:'Lighting',subcategory:'Bulb — White',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'End Device',mesh_note:'End device only by design — Sengled deliberately does not act as a router. This means switching off at the wall does not disrupt your mesh. A unique and practical design choice.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Excellent',hub_aqara:'Partial',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Deliberately end-device only — switching off does not disrupt mesh|Good dimming|Compatible with Echo without gateway',pairing_notes:'Standard pairing — hold or switch off/on to reset|Pairs well with Echo directly',known_issues:'No routing capability — ensure you have enough dedicated router devices|Not all colour temperature features available on all hubs',verdict_note:'A smart design choice — switching off does not disrupt your mesh. Good Echo compatibility.',amazon_url:'https://amzn.to/placeholder',region_notes:'US primarily — E26 fitting'},
+
+{brand:'Innr',model_name:'Smart Bulb Colour RB 185 C',model_code:'RB 185 C',category:'Lighting',subcategory:'Bulb — Colour',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Acts as a router when powered on. Good Zigbee 3.0 compatibility across multiple hubs.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Good',hub_aqara:'Partial',hub_hue:'Good',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Full RGB colour|Zigbee 3.0 — broader compatibility than Hue|Works with Hue Bridge',pairing_notes:'Reset by switching off/on 6 times|Pairs well on most Zigbee 3.0 hubs',known_issues:'Never switch off at wall|Some colour accuracy differences vs Philips Hue',verdict_note:'Good Zigbee 3.0 colour bulb. Works across multiple ecosystems including Hue Bridge.',amazon_url:'https://amzn.to/placeholder',region_notes:'EU and UK primarily'},
+
+{brand:'Aqara',model_name:'LED Bulb T1',model_code:'ZNLDP13LM',category:'Lighting',subcategory:'Bulb — White',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Acts as a router when powered on. Best within Aqara ecosystem — more limited elsewhere.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Tunable white|Dimming|Native Aqara features with M2 hub',pairing_notes:'Reset by switching off/on 5 times|Best paired with Aqara M2 hub',known_issues:'More limited features outside Aqara ecosystem|Never switch off at wall',verdict_note:'Best within Aqara ecosystem. Limited features on other hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check fitting type'},
+
+{brand:'Sonoff',model_name:'B02-BL-A60 Smart Bulb',model_code:'B02-BL-A60',category:'Lighting',subcategory:'Bulb — White',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Acts as a router when powered on. Best within Sonoff iHost ecosystem.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Partial',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Excellent',hub_hubitat:'Good',key_behaviours:'Tunable white|Dimming|Best with Sonoff iHost',pairing_notes:'Reset by switching off/on 5 times|Best with Sonoff iHost or Z2M',known_issues:'More limited on non-Sonoff hubs|Never switch off at wall',verdict_note:'Best with Sonoff iHost. Good Z2M support. More limited on other hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check fitting type'},
+
+// ── SWITCHES / RELAYS ──
+{brand:'Sonoff',model_name:'ZBMINI Relay',model_code:'ZBMINI',category:'Switch',subcategory:'In-wall Relay',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — mains powered and always on. A reliable mesh contributor when installed.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'In-wall installation|Requires neutral wire|Good router capability',pairing_notes:'Hold button 5 seconds with power applied|Pairs cleanly on all Zigbee 3.0 hubs|Requires electrician in some regions',known_issues:'Requires neutral wire — check your wiring first|Installation requires caution — involves live wiring',verdict_note:'Excellent in-wall relay. Requires neutral wire. Check local electrical regulations before installing.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check voltage rating'},
+
+{brand:'Sonoff',model_name:'ZBMINIL2 Relay',model_code:'ZBMINIL2',category:'Switch',subcategory:'In-wall Relay',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — improved over original ZBMINI. Works without neutral wire.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'No neutral wire required|Compact fit|Good router capability',pairing_notes:'Hold button 5 seconds with power on|Clean pairing on all Zigbee 3.0 hubs',known_issues:'No-neutral operation can cause flicker with some LED bulbs|Still involves live wiring — check local regulations',verdict_note:'Excellent improvement over ZBMINI — no neutral wire required. Highly recommended.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check voltage rating'},
+
+{brand:'Aqara',model_name:'Single Switch Module T1',model_code:'SSM-U01',category:'Switch',subcategory:'In-wall Relay',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'Good router — native Aqara device, best with Aqara hub. Good Z2M support also.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'In-wall installation|Neutral required|Native Aqara features with M2',pairing_notes:'Hold button with power on|Best with Aqara M2 or Z2M',known_issues:'Full features require Aqara hub|Involves live wiring',verdict_note:'Best with Aqara hub. Good Z2M support. More limited on other platforms.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check voltage'},
+
+{brand:'IKEA',model_name:'TRADFRI Shortcut Button',model_code:'E1812',category:'Switch',subcategory:'Remote / Button',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — a simple single button for scene triggering.',overall_rating:'Good',hub_ha_z2m:'Good',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'No',hub_hue:'Partial',hub_ikea:'Excellent',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Single button — press, double press, hold|Simple scene triggering|Long battery life',pairing_notes:'Hold pairing button until LED blinks|Best with IKEA Dirigera|Z2M support available',known_issues:'Limited to single button — no dimming wheel|Full automation requires hub that supports button events',verdict_note:'Simple and reliable. Best within IKEA ecosystem. Z2M support available.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'SNZB-01 Wireless Button',model_code:'SNZB-01',category:'Switch',subcategory:'Remote / Button',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR2032',mesh_role:'End Device',mesh_note:'End device only — a versatile wireless button for triggering automations.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'Good',hub_aqara:'Good',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Excellent',hub_hubitat:'Excellent',key_behaviours:'Single, double and long press actions|Wide compatibility|Good battery life',pairing_notes:'Hold button 5 seconds|Pairs cleanly on all major hubs',known_issues:'None significant',verdict_note:'Excellent wireless button with broad compatibility. Works well with your hub.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+// ── CLIMATE ──
+{brand:'Sonoff',model_name:'TRVZB Thermostatic Valve',model_code:'TRVZB',category:'Climate',subcategory:'TRV',zigbee_version:'3.0',power_type:'Battery',battery_type:'AA',mesh_role:'End Device',mesh_note:'End device only — battery powered TRV. Does not extend your mesh.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'No',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Good',hub_hubitat:'Good',key_behaviours:'Thermostatic radiator valve control|Scheduling|Temperature feedback',pairing_notes:'Hold button to pair|Best with Z2M or iHost for full features',known_issues:'Battery life shorter than expected in cold climates|Full scheduling requires capable hub',verdict_note:'Good TRV with Z2M or iHost. Limited features on other hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'EU primarily'},
+
+{brand:'Tuya',model_name:'BRT-100 Thermostatic Valve',model_code:'BRT-100-TRV',category:'Climate',subcategory:'TRV',zigbee_version:'3.0',power_type:'Battery',battery_type:'AA',mesh_role:'End Device',mesh_note:'End device only — popular Tuya TRV. Well supported in Z2M with quirks file.',overall_rating:'Partial',hub_ha_z2m:'Good',hub_ha_zha:'Partial',hub_echo:'No',hub_aqara:'No',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Partial',key_behaviours:'Thermostatic control|Built-in display|Tuya firmware quirks',pairing_notes:'Hold button to pair|Z2M provides best support with Tuya quirks file',known_issues:'Tuya firmware varies by batch|Some calibration offset reported|Z2M recommended for reliable operation',verdict_note:'Best with Z2M which handles Tuya quirks. More limited on other hubs.',amazon_url:'https://amzn.to/placeholder',region_notes:'EU primarily'},
+
+// ── AIR QUALITY ──
+{brand:'Aqara',model_name:'TVOC Air Quality Monitor',model_code:'VOCKQJK11LM',category:'Sensor',subcategory:'Air Quality',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'End Device',mesh_note:'Mains powered but end device only — does not act as a router. Unusual for a mains device.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Excellent',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Partial',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'CO2, TVOC, temperature and humidity|Built-in display|Native Aqara dashboard',pairing_notes:'Hold button to pair|Best with Aqara M2 or Z2M for full data access',known_issues:'Full data access requires Aqara hub or Z2M|Does not act as router despite being mains powered',verdict_note:'Excellent air quality sensor. Full data with Aqara hub or Z2M. Limited elsewhere.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+// ── HUBS ──
+{brand:'Sonoff',model_name:'ZBDongle-E',model_code:'ZBDongle-E',category:'Hub',subcategory:'Coordinator Dongle',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'This IS the coordinator — not an end device. The ZBDongle-E is the Zigbee network hub.',overall_rating:'Excellent',hub_ha_z2m:'Excellent',hub_ha_zha:'Excellent',hub_echo:'No',hub_aqara:'No',hub_hue:'No',hub_ikea:'No',hub_smartthings:'No',hub_sonoff_ihost:'No',hub_hubitat:'No',key_behaviours:'Best-in-class coordinator chip (EFR32MG21)|Works with Z2M and ZHA|USB connection to host computer',pairing_notes:'Plug into host computer|Install Z2M or ZHA|No additional pairing steps — this IS the hub',known_issues:'Requires a host computer or Pi — not standalone|USB extension cable recommended to reduce interference',verdict_note:'The top recommended Zigbee coordinator for Home Assistant. Pair with HA Green or Raspberry Pi.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Aqara',model_name:'Hub M2',model_code:'ZHWG12LM',category:'Hub',subcategory:'Smart Hub',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'This IS the coordinator. Acts as the Zigbee network hub for your devices.',overall_rating:'Excellent',hub_ha_z2m:'No',hub_ha_zha:'No',hub_echo:'No',hub_aqara:'No',hub_hue:'No',hub_ikea:'No',hub_smartthings:'No',hub_sonoff_ihost:'No',hub_hubitat:'No',key_behaviours:'Local processing|Apple Home, Alexa and Google support|Best with Aqara devices',pairing_notes:'Set up via Aqara Home app|Connect to router via ethernet or WiFi|Then pair Zigbee devices via the app',known_issues:'Best performance with Aqara native devices|Third-party device support is improving but limited',verdict_note:'Excellent local hub for Aqara ecosystem. See our hub guide for full details.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+{brand:'Sonoff',model_name:'iHost Smart Home Hub',model_code:'IHOST',category:'Hub',subcategory:'Smart Hub',zigbee_version:'3.0',power_type:'Mains',battery_type:'None',mesh_role:'Router',mesh_note:'This IS the coordinator. Local Zigbee hub — no cloud required.',overall_rating:'Excellent',hub_ha_z2m:'No',hub_ha_zha:'No',hub_echo:'No',hub_aqara:'No',hub_hue:'No',hub_ikea:'No',hub_smartthings:'No',hub_sonoff_ihost:'No',hub_hubitat:'No',key_behaviours:'Fully local — no cloud required|Web interface|Best with Sonoff devices',pairing_notes:'Set up via web interface on local network|Then pair Zigbee devices through the interface',known_issues:'Third-party device support more limited than Z2M|Growing ecosystem',verdict_note:'Solid local hub. Best with Sonoff devices. See our hub guide for details.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide'},
+
+// ── SECURITY ──
+{brand:'Heiman',model_name:'Zigbee Smoke Detector',model_code:'HS1SA-M',category:'Security',subcategory:'Smoke Detector',zigbee_version:'3.0',power_type:'Battery',battery_type:'CR123A',mesh_role:'End Device',mesh_note:'End device only — battery powered safety device. Ensure mesh coverage is reliable for this device.',overall_rating:'Good',hub_ha_z2m:'Excellent',hub_ha_zha:'Good',hub_echo:'Partial',hub_aqara:'Partial',hub_hue:'No',hub_ikea:'No',hub_smartthings:'Good',hub_sonoff_ihost:'Partial',hub_hubitat:'Good',key_behaviours:'Photoelectric smoke detection|Local alarm|Zigbee alert to hub|Interconnect capable',pairing_notes:'Hold test button to pair|Ensure strong mesh coverage — this is a safety device|Test thoroughly after installation',known_issues:'Battery life varies — test monthly as with any smoke detector|Ensure mesh is reliable — a safety-critical device should never be in a dead zone',verdict_note:'Good Zigbee smoke detector. Best with Z2M. Ensure strong mesh coverage for safety-critical devices.',amazon_url:'https://amzn.to/placeholder',region_notes:'Worldwide — check local certification requirements'},
+
+];
+
+// ── STATE ──
+let selectedHub = '';
+let selectedCategory = 'All';
+let searchQuery = '';
+let selectedDevice = null;
+
+const HUB_NAMES = {
+  hub_ha_z2m: 'Home Assistant + Zigbee2MQTT',
+  hub_ha_zha: 'Home Assistant + ZHA',
+  hub_echo: 'Amazon Echo',
+  hub_aqara: 'Aqara Hub M2 / M3',
+  hub_hue: 'Philips Hue Bridge',
+  hub_ikea: 'IKEA Dirigera',
+  hub_smartthings: 'Samsung SmartThings',
+  hub_sonoff_ihost: 'Sonoff iHost',
+  hub_hubitat: 'Hubitat Elevation',
+};
+
+const RATING_ICONS = {
+  Excellent: '✅',
+  Good: '✅',
+  Partial: '⚠️',
+  Limited: '⚠️',
+  No: '❌',
+  Unknown: '❓',
+};
+
+const RATING_LABELS = {
+  Excellent: 'Excellent',
+  Good: 'Good',
+  Partial: 'Partial',
+  Limited: 'Limited',
+  No: 'Not Compatible',
+  Unknown: 'Unknown',
+};
+
+function getBrandClass(brand) {
+  const map = {
+    'Aqara':'brand-Aqara','Sonoff':'brand-Sonoff','IKEA':'brand-IKEA',
+    'Philips':'brand-Philips','Sengled':'brand-Sengled','Innr':'brand-Innr',
+    'Tuya':'brand-Tuya','Samsung':'brand-Samsung','NOUS':'brand-NOUS',
+    'Third Reality':'brand-Third','Heiman':'brand-Heiman',
+  };
+  return map[brand] || 'brand-default';
+}
+
+function getDeviceRating(device) {
+  if (!selectedHub) return device.overall_rating;
+  return device[selectedHub] || 'Unknown';
+}
+
+function setCategory(cat, btn) {
+  selectedCategory = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  selectedHub = document.getElementById('hubSelect').value;
+  searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+  const hubEl = document.getElementById('hubSelect');
+  hubEl.classList.toggle('active', !!selectedHub);
+  selectedDevice = null;
+  renderResults();
+}
+
+function filterDevices() {
+  return DEVICES.filter(d => {
+    const catMatch = selectedCategory === 'All' || d.category === selectedCategory;
+    const searchMatch = !searchQuery ||
+      d.model_name.toLowerCase().includes(searchQuery) ||
+      d.model_code.toLowerCase().includes(searchQuery) ||
+      d.brand.toLowerCase().includes(searchQuery) ||
+      d.subcategory.toLowerCase().includes(searchQuery);
+    return catMatch && searchMatch;
+  });
+}
+
+function renderResults() {
+  const area = document.getElementById('resultsArea');
+  const filtered = filterDevices();
+
+  if (selectedDevice) {
+    renderDetail(area, selectedDevice);
+    return;
+  }
+
+  if (filtered.length === 0) {
+    area.innerHTML = `
+    <div class="no-results">
+      <div class="no-results-em">🔍</div>
+      <div class="no-results-title">No devices found</div>
+      <div class="no-results-sub">Try a different search term or clear the category filter.<br>Our database is growing — if your device isn't listed yet, check back soon.</div>
+    </div>`;
+    return;
+  }
+
+  const hubLabel = selectedHub ? HUB_NAMES[selectedHub] : null;
+  const metaText = hubLabel
+    ? `${filtered.length} device${filtered.length !== 1 ? 's' : ''} — showing compatibility with ${hubLabel}`
+    : `${filtered.length} device${filtered.length !== 1 ? 's' : ''} — select your hub above for personalised results`;
+
+  let html = `<div class="results-meta">${metaText}</div><div class="device-list">`;
+
+  filtered.forEach((d, i) => {
+    const rating = getDeviceRating(d);
+    const icon = RATING_ICONS[rating] || '❓';
+    html += `
+    <div class="device-row" onclick="selectDevice(${DEVICES.indexOf(d)})">
+      <span class="dev-brand-pill ${getBrandClass(d.brand)}">${d.brand}</span>
+      <div class="dev-info">
+        <div class="dev-name">${d.model_name}</div>
+        <div class="dev-code">${d.model_code}</div>
+        <div class="dev-tags">
+          <span class="dev-tag">${d.subcategory}</span>
+          <span class="dev-tag">${d.zigbee_version === '3.0' ? 'Zigbee 3.0' : 'Zigbee HA'}</span>
+          <span class="dev-tag">${d.mesh_role}</span>
+          ${d.power_type === 'Battery' ? `<span class="dev-tag">🔋 ${d.battery_type}</span>` : '<span class="dev-tag">🔌 Mains</span>'}
+        </div>
+      </div>
+      <div class="dev-compat">
+        ${selectedHub ? `<span class="compat-badge badge-${rating}">${icon} ${RATING_LABELS[rating]}</span>` : '<span class="compat-badge badge-Unknown">Select hub →</span>'}
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function selectDevice(idx) {
+  selectedDevice = DEVICES[idx];
+  renderDetail(document.getElementById('resultsArea'), selectedDevice);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function renderDetail(area, d) {
+  const hubRating = selectedHub ? (d[selectedHub] || 'Unknown') : d.overall_rating;
+  const hubName = selectedHub ? HUB_NAMES[selectedHub] : 'Overall';
+  const icon = RATING_ICONS[hubRating] || '❓';
+  const verdictTitle = {
+    Excellent: `Excellent with ${hubName}`,
+    Good: `Good with ${hubName}`,
+    Partial: `Partial compatibility with ${hubName}`,
+    Limited: `Limited with ${hubName}`,
+    No: `Not compatible with ${hubName}`,
+    Unknown: 'Compatibility unknown',
+  }[hubRating] || 'Compatibility unknown';
+
+  const behaviours = d.key_behaviours ? d.key_behaviours.split('|') : [];
+  const pairingNotes = d.pairing_notes ? d.pairing_notes.split('|') : [];
+  const knownIssues = d.known_issues && d.known_issues !== 'None' ? d.known_issues.split('|') : [];
+
+  const ecoRows = [
+    {key:'hub_ha_z2m',  name:'Home Assistant + Zigbee2MQTT'},
+    {key:'hub_ha_zha',  name:'Home Assistant + ZHA'},
+    {key:'hub_echo',    name:'Amazon Echo'},
+    {key:'hub_aqara',   name:'Aqara Hub M2 / M3'},
+    {key:'hub_hue',     name:'Philips Hue Bridge v2'},
+    {key:'hub_ikea',    name:'IKEA Dirigera'},
+    {key:'hub_smartthings', name:'Samsung SmartThings'},
+    {key:'hub_sonoff_ihost',name:'Sonoff iHost'},
+    {key:'hub_hubitat', name:'Hubitat Elevation'},
+  ];
+
+  area.innerHTML = `
+  <div class="detail-card">
+    <div class="detail-top">
+      <div class="detail-breadcrumb">
+        <button onclick="backToList()">← Back to results</button>
+        <span>·</span>
+        <span>${d.brand}</span>
+        <span>·</span>
+        <span>${d.subcategory}</span>
+      </div>
+
+      <div class="detail-name">${d.brand} ${d.model_name}</div>
+      <div class="detail-meta">
+        <span class="detail-meta-chip code">${d.model_code}</span>
+        <span class="detail-meta-chip">${d.zigbee_version === '3.0' ? 'Zigbee 3.0' : 'Zigbee HA'}</span>
+        <span class="detail-meta-chip">${d.power_type === 'Battery' ? '🔋 ' + d.battery_type : '🔌 Mains powered'}</span>
+        <span class="detail-meta-chip">${d.category}</span>
+        <span class="detail-meta-chip">${d.region_notes}</span>
+      </div>
+
+      <div class="verdict-banner ${hubRating}">
+        <div class="verdict-icon">${icon}</div>
+        <div class="verdict-right">
+          <div class="verdict-label">${selectedHub ? 'With ' + hubName : 'Overall rating'}</div>
+          <div class="verdict-title">${verdictTitle}</div>
+          <div class="verdict-note">${d.verdict_note}</div>
+        </div>
+      </div>
+
+      <div class="mesh-row">
+        <div class="mesh-icon">${d.mesh_role === 'Router' ? '🔌' : '📡'}</div>
+        <div>
+          <div class="mesh-role-label">${d.mesh_role}</div>
+          <div class="mesh-role-note">${d.mesh_note}</div>
+        </div>
+      </div>
+
+      <div class="info-cards">
+        <div class="info-card">
+          <div class="info-card-title">📋 Key Behaviour</div>
+          <div class="info-items">
+            ${behaviours.length > 0
+              ? behaviours.map(b => `<div class="info-item"><span class="info-bullet">→</span>${b}</div>`).join('')
+              : '<div class="no-items">No behaviour notes available</div>'}
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">🔧 Pairing Notes</div>
+          <div class="info-items">
+            ${pairingNotes.length > 0
+              ? pairingNotes.map(p => `<div class="info-item"><span class="info-bullet">→</span>${p}</div>`).join('')
+              : '<div class="no-items">No pairing notes available</div>'}
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">⚠️ Known Issues</div>
+          <div class="info-items">
+            ${knownIssues.length > 0
+              ? knownIssues.map(i => `<div class="info-item issue"><span class="info-bullet">!</span>${i}</div>`).join('')
+              : '<div class="no-items">No known issues reported ✓</div>'}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="ecosystem-toggle" id="ecoToggle" onclick="toggleEco()">
+      Full Ecosystem Compatibility Table
+      <span class="eco-arrow">▼</span>
+    </button>
+    <div class="ecosystem-body" id="ecoBody">
+      <table class="eco-table">
+        <thead>
+          <tr>
+            <th>Hub / Platform</th>
+            <th>Compatibility</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ecoRows.map(row => {
+            const val = d[row.key] || 'Unknown';
+            const ico = RATING_ICONS[val] || '❓';
+            const highlight = selectedHub === row.key ? 'style="background:var(--el-light);"' : '';
+            return `<tr ${highlight}>
+              <td class="eco-hub-name">${row.name}${selectedHub === row.key ? ' ← your hub' : ''}</td>
+              <td><span class="eco-status eco-${val}">${ico} ${RATING_LABELS[val] || val}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="amazon-row">
+      <a class="amazon-link" href="${d.amazon_url}" target="_blank" rel="noopener sponsored">
+        🛍️ Check price on Amazon
+      </a>
+      <span class="region-note">Region: ${d.region_notes} · Prices vary by seller</span>
+    </div>
+  </div>`;
+}
+
+function toggleEco() {
+  const btn = document.getElementById('ecoToggle');
+  const body = document.getElementById('ecoBody');
+  btn.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function backToList() {
+  selectedDevice = null;
+  renderResults();
+}
+
+// ── INIT — load from Google Sheets ──
+loadData();
+</script>
+</body>
+</html>
